@@ -14,10 +14,10 @@ Slingshot.Cloudinary = {
   },
 
   directiveDefault: Object.assign({}, {
-    CloudinarySecret: Meteor.settings.CloudinarySecret,
-    CloudinaryKey: Meteor.settings.CloudinaryKey,
-    CloudinaryCloudName: Meteor.settings.CloudinaryCloudName,
-    CloudinaryPreset: Meteor.settings.CloudinaryPreset,
+    CloudinarySecret: Meteor.settings.cloudinary.CloudinarySecret,
+    CloudinaryKey: Meteor.settings.cloudinary.CloudinaryKey,
+    CloudinaryCloudName: Meteor.settings.cloudinary.CloudinaryCloudName,
+    CloudinaryPreset: Meteor.settings.cloudinary.CloudinaryPreset,
   }),
 
   isImage(mime) {
@@ -41,7 +41,7 @@ Slingshot.Cloudinary = {
 
   upload: function upload(method, directive, file) {
     const { CloudinaryCloudName } = directive;
-    const publicId = directive.key();
+    const publicId = directive.key(file);
 
     // Cloudinary's node lib supplies most of what we need.
     const cloudinarySign = this.cloudinarySign(publicId, directive, file);
@@ -51,10 +51,11 @@ Slingshot.Cloudinary = {
     );
 
     const type = this.resourceType(file.type);
+    const protocol = Meteor.settings.cloudinary.allowHttps ? 'https' : 'http'
 
     const retVal = {
       upload: cloudinarySign.form_attrs.action,
-      download: `http://res.cloudinary.com/${CloudinaryCloudName}/${type}/upload/${publicId}`,
+      download: `${protocol}://res.cloudinary.com/${CloudinaryCloudName}/${type}/upload/${publicId}`,
       postData,
     };
 
