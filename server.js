@@ -10,14 +10,14 @@ Slingshot.Cloudinary = {
     key: Match.OneOf(String, Function),
 
     tags: Match.Optional(Match.OneOf(String, [String])),
-    folder: Match.Optional(String),
+    folder: Match.Optional(Match.OneOf(String, Function)),
   },
 
   directiveDefault: Object.assign({}, {
-    CloudinarySecret: Meteor.settings.cloudinary.CloudinarySecret,
-    CloudinaryKey: Meteor.settings.cloudinary.CloudinaryKey,
-    CloudinaryCloudName: Meteor.settings.cloudinary.CloudinaryCloudName,
-    CloudinaryPreset: Meteor.settings.cloudinary.CloudinaryPreset,
+    CloudinarySecret: Meteor.settings.slingshot.CloudinarySecret,
+    CloudinaryKey: Meteor.settings.slingshot.CloudinaryKey,
+    CloudinaryCloudName: Meteor.settings.slingshot.CloudinaryCloudName,
+    CloudinaryPreset: Meteor.settings.slingshot.CloudinaryPreset
   }),
 
   isImage(mime) {
@@ -45,17 +45,12 @@ Slingshot.Cloudinary = {
 
     // Cloudinary's node lib supplies most of what we need.
     const cloudinarySign = this.cloudinarySign(publicId, directive, file);
-
-    const postData = _.map(cloudinarySign.hidden_fields,
-      (value, name) => ({ value, name })
-    );
-
+    const postData = _.map(cloudinarySign.hidden_fields, (value, name) => ({ value, name }));
     const type = this.resourceType(file.type);
-    const protocol = Meteor.settings.cloudinary.allowHttps ? 'https' : 'http'
 
     const retVal = {
       upload: cloudinarySign.form_attrs.action,
-      download: `${protocol}://res.cloudinary.com/${CloudinaryCloudName}/${type}/upload/${publicId}`,
+      download: '',
       postData,
     };
 
@@ -78,7 +73,13 @@ Slingshot.Cloudinary = {
 
     // Assign optional cloudinary options
     if (_.has(directive, 'tags')) options.tags = directive.tags;
-    if (_.has(directive, 'folder')) options.folder = directive.folder;
+    if (_.has(directive, 'folder')) {
+      if (typeof directive.folder === 'function') {
+        options.folder = directive.folder()
+      } else {
+        options.folder = directive.folder
+      }
+    };
 
     const signature = Cloudinary.uploader.direct_upload('', options);
 
