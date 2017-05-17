@@ -47,7 +47,7 @@ Slingshot.Cloudinary = {
     const cloudinarySign = this.cloudinarySign(publicId, directive, file);
 
     const postData = _.map(cloudinarySign.hidden_fields,
-      (value, name) => { return { value, name }; }
+      (value, name) => ({ value, name })
     );
 
     const type = this.resourceType(file.type);
